@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const api = (user) => {
-	const token = user.token; // Assuming you have a token in your user object
+	const token = user.token; 
 	const instance = axios.create({
 		baseURL: 'http://localhost:5000/api/v1',
 		headers: {
