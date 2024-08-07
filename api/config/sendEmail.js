@@ -21,8 +21,8 @@ let transporter = nodemailer.createTransport({
 	secure: false,
 	requireTLS: true,
 	auth: {
-		user: 'eesttle.co.sz',
-		pass: '5upp0rt!',
+		user: '',
+		pass: '',
 	},
 	tls: {
 		ciphers: 'SSLv3',
