@@ -1,0 +1,35 @@
+{
+  "name": "api",
+  "version": "1.0.0",
+  "description": "",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "main": "app.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "argon2": "*",
+    "auto-increment-group": "^1.1.0",
+    "body-parser": "*",
+    "cloudinary": "^2.2.0",
+    "cors": "*",
+    "cors-anywhere": "*",
+    "dotenv": "^16.4.5",
+    "email-templates": "*",
+    "express": "*",
+    "express-async-handler": "*",
+    "handlebars": "*",
+    "jsonwebtoken": "*",
+    "jspdf": "^2.5.1",
+    "moment": "*",
+    "mongoose": "^6.10.0",
+    "morgan": "*",
+    "multer": "^1.4.5-lts.1",
+    "node-fetch": "^2.7.0",
+    "nodemailer-handlebars": "^1.0.1",
+    "nodemon": "*",
+    "qrcode": "^1.5.3"
+  }
+}

@@ -1,0 +1,56 @@
+
+.chartBox {
+	display: flex;
+	height: 100%;
+}
+.boxInfo {
+	flex: 3;
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+}
+.title {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+}
+.chartInfo {
+	flex: 2;
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+}
+.chart {
+	width: 100%;
+	height: 100%;
+}
+.texts {
+	display: flex;
+	flex-direction: column;
+	text-align: right;
+	font-size: 5px;
+}
+.duration {
+	font-size: 14px;
+}
+.chartIcon{
+    font-size: 30px;
+}
+.chartBoxTitle{
+	font-weight: 500;
+	font-size: 15px;
+	color: #d3d3d3;
+}
+.chartBoxContent{
+	color: #c0c0c0;
+	
+}
+.chartBoxLink{
+	text-decoration: none;
+	color: #6b6e74;
+	font-size: 15px;
+	font-weight: 500;
+}.chartBoxLink:hover{
+	
+	color: #9e250d;
+}
