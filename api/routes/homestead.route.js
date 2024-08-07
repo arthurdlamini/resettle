@@ -19,6 +19,11 @@ router.get('/notrelocated',authMiddleware,homesteadController.countAllNotRelocat
 //count all homesteads
 router.get('/all',authMiddleware,homesteadController.countAllhomesteads)
 
+//Get homesteads router reports
+router.get('/report/:id',async (req,res,next)=>{
+res.send('Reporting found')
+})
+
 router.get('/',homesteadController.findAllhomesteads);
 //find homestead by ID
 router.get('/:id',authMiddleware,homesteadController.findhomesteadbyId);
