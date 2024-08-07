@@ -17,6 +17,7 @@ const db = 'mongodb://localhost:27017/eswade';
 //Static content
 
 app.use('/uploads', express.static(path.join(__dirname, 'public')));
+
 const { notFound, errorHandler } = require('./middleware/errorHandler');
 const cors = require('cors');
 //morgan logger
