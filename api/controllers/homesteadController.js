@@ -1,5 +1,7 @@
+const Homestead = require('../models/Homestead');
 const homestead = require('../models/Homestead');
-const moment = require('moment')
+const moment = require('moment');
+const Person = require('../models/Person');
 //reverse object
 function dict_reverse(obj) {
 	new_obj = {};
@@ -149,5 +151,9 @@ module.exports = {
 				if (err) return res.json(err);
 				res.json(data);
 			});
-	},
+	}, async gethomesteadReport(req,res){
+		let homesteads = await Homestead.find().populate('homesteadHead')
+		console.log(homesteads)
+		
+	}
 };

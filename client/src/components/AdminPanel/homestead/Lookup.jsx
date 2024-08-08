@@ -320,16 +320,6 @@ function Lookup() {
                       <div className="row">
                         <div className="col d-flex flex-column flex-sm-row justify-content-between mb-3">
                           <div className="text-sm-left mb-2 mb-sm-0">
-                            <div className="text-muted custom-control-label mt-2">
-                              <button
-                                onClick={() => {
-                                  handleShow();
-                                }}
-                                className="btn btn-primary"
-                              >
-                                Add intervention
-                              </button>
-                            </div>
                           </div>
                         </div>
                         <div className="row mt-2">

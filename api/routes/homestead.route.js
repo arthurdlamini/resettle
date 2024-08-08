@@ -16,13 +16,12 @@ router.get('/fivemonths',authMiddleware,homesteadController.getAllHomesteadFiveM
 router.get('/relocated',authMiddleware,homesteadController.countAllRelocatedHomes)
 //get all homesteads for the ast five months
 router.get('/notrelocated',authMiddleware,homesteadController.countAllNotRelocatedHomes)
+
 //count all homesteads
 router.get('/all',authMiddleware,homesteadController.countAllhomesteads)
 
 //Get homesteads router reports
-router.get('/report/:id',async (req,res,next)=>{
-res.send('Reporting found')
-})
+router.get('/report',homesteadController.gethomesteadReport)
 
 router.get('/',homesteadController.findAllhomesteads);
 //find homestead by ID
