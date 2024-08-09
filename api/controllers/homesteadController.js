@@ -1,5 +1,7 @@
 const Homestead = require('../models/Homestead');
 const homestead = require('../models/Homestead');
+const CompensationModel = require('../models/Compensation')
+const fieldmodel = require('../models/Field')
 const moment = require('moment');
 const Person = require('../models/Person');
 const mongoose = require("mongoose");
@@ -340,28 +342,225 @@ module.exports = {
 				},
 
 			])
+		
 
+			
+			
+				
+				
+			
 			res.json(result);
 		} catch (error) {
 			res.status()
 			console.log(error)
 		}
 
-	}, async singlehomesteadreport(req, res) {
+	},
+	async  allHomesteadReports(req, res) {
+		try {
+			const results = await homestead.aggregate([
+				{
+					$lookup: {
+						from: "buildings",
+						localField: "_id",
+						foreignField: "homesteadID",
+						as: "buildings",
+					},
+				},
+				{
+					$lookup: {
+						from: "compensations",
+						localField: "_id",
+						foreignField: "homesteadId",
+						as: "compensations",
+					},
+				},
+				{
+					$lookup: {
+						from: "fields",
+						localField: "_id",
+						foreignField: "homesteadId",
+						as: "fields",
+					},
+				},
+				{
+					$lookup: {
+						from: "graves",
+						localField: "_id",
+						foreignField: "homesteadId",
+						as: "graves",
+					},
+				},
+				{
+					$lookup: {
+						from: "structures",
+						localField: "_id",
+						foreignField: "homesteadID",
+						as: "structures",
+					},
+				},
+				{
+					$lookup: {
+						from: "trees",
+						localField: "_id",
+						foreignField: "homesteadId",
+						as: "trees",
+					},
+				},
+				{
+					$lookup: {
+						from: "people",
+						localField: "homesteadHead",
+						foreignField: "_id",
+						as: "owner_details",
+					},
+				},
+				{
+					$addFields: {
+						owner_details: {
+							$arrayElemAt: ["$owner_details", 0],
+						},
+					},
+				},
+				{
+					$addFields: {
+						numberOfGraves: {
+							$size: {
+								$ifNull: ["$graves", []],
+							},
+						},
+						numberOfTrees: {
+							$size: {
+								$ifNull: ["$trees", []],
+							},
+						},
+						numberOfBuildings: {
+							$size: {
+								$ifNull: ["$buildings", []],
+							},
+						},
+						numberOfStructures: {
+							$size: {
+								$ifNull: ["$structures", []],
+							},
+						},
+						numberOfFields: {
+							$size: {
+								$ifNull: ["$fields", []],
+							},
+						},
+						owners_name: "$owner_details.name",
+						owners_ID: "$owner_details.IDNo",
+						owners_phone: "$owner_details.phone",
+					},
+				},
+				{
+					$project: {
+						homesteadHead: 0,
+						fields: 0,
+						images: 0,
+						updatedAt: 0,
+						__v: 0,
+						structures: 0,
+						graves: 0,
+						buildings: 0,
+						trees: 0,
+						owner_details: 0,
+						_id: 0,
+					},
+				},
+			]);
+	
+			// Process compensations and field yields for each homestead
+			for (let result of results) {
+				let compensate = result.compensations;
+				let allIntervention = [];
+	
+				await Promise.all(compensate.map(async (item) => {
+					let allcompensations = await CompensationModel.find({ homesteadId: item.homesteadId })
+						.populate('intervantionId')
+						.populate('unitId');
+					allIntervention.push(allcompensations);
+				}));
+	
+				let newintervantion = allIntervention.map((item, index) => {
+					return {
+						type: item[index].intervantionId.type,
+						unit: item[index].unitId.unitName,
+						quantity: item[index].quantity
+					};
+				});
+	
+				result.compensations = newintervantion;
+	
+				const fieldYield = await fieldmodel.aggregate([
+					{
+						$match: {
+							homesteadId: result._id
+						}
+					},
+					{
+						$lookup: {
+							from: "fieldyields",
+							localField: "_id",
+							foreignField: "fieldId",
+							as: "field_yield"
+						}
+					},
+					{
+						$project: {
+							field_yield: {
+								croptype: 1,
+								priceperton: 1,
+								costperhectare: 1,
+								yieldperhectare: 1,
+								totalcost: 1,
+								grossmargin: 1,
+							},
+							length: 1,
+							width: 1,
+							area: 1,
+							relocated: 1,
+							_id: 0
+						}
+					},
+					{
+						$group: {
+							_id: null,
+							fields: {
+								$push: "$$ROOT"
+							}
+						}
+					}
+				]);
+	
+				result.fieldYield = fieldYield[0];
+			}
+	
+			res.json(results);
+		} catch (error) {
+			res.status(500).json({ error: true, message: error.message });
+		}
+	}
+,	
+	//Get single home report
+
+	async singlehomesteadreport(req, res) {
 
 
 		const { id } = req.params;
+		if (!mongoose.Types.ObjectId.isValid(id)) {
 
-		let d = mongoose.Types.ObjectId(id)
+			return res.json({ error: true })
+		}
+		let homesteadID = mongoose.Types.ObjectId(id)
 		try {
 			const result = await homestead.aggregate([
 				{
 					$match: {
-						_id: d,
+						_id: homesteadID,
 					},
 				},
-
-
 				{
 					$lookup: {
 						from: "buildings",
@@ -464,12 +663,9 @@ module.exports = {
 				},
 				{
 					$project:
-					/**
-					 * specifications: The fields to
-					 *   include or exclude.
-					 */
 					{
 						homesteadHead: 0,
+						fields: 0,
 						images: 0,
 						updatedAt: 0,
 						__v: 0,
@@ -483,9 +679,78 @@ module.exports = {
 				},
 
 			])
-			res.json(result);
+
+			//Get compensations from the array
+
+			let compensate = result[0].compensations;
+			let allIntervention = []
+
+			await Promise.all(compensate.map(async (item) => {
+				let allcompensations = await CompensationModel.find({ homesteadId: item.homesteadId })
+					.populate('intervantionId')
+					.populate('unitId')
+				allIntervention.push(allcompensations);
+			}));
+
+			let newintervantion = allIntervention.map((item, index) => {
+				return {
+					type: item[index].intervantionId.type,
+					unit: item[index].unitId.unitName,
+					quantity: item[index].quantity
+				}
+			})
+
+
+
+			//Filed yield population
+			const fieldYield = await fieldmodel.aggregate([
+				{
+					$match: {
+						homesteadId: homesteadID
+					}
+				},
+				{
+					$lookup: {
+						from: "fieldyields",
+						localField: "_id",
+						foreignField: "fieldId",
+						as: "field_yield"
+					}
+				},
+				{
+					$project: {
+						field_yield: {
+							croptype:1,
+							priceperton:1,
+							costperhectare:1,
+							yieldperhectare:1,
+							totalcost:1,
+							grossmargin:1,
+						},
+						length: 1,
+						width: 1,
+						area: 1,
+						relocated: 1,
+						_id: 0
+					}
+				},
+				{
+					$group: {
+						_id: null,
+						fields: {
+							$push: "$$ROOT"
+						}
+					}
+				}
+			])
+
+			const response = { ...result, compensations: newintervantion }
+			response["0"].compensations = response.compensations;
+			res.json({ ...response[0], ...fieldYield[0] });
+
 		} catch (error) {
-			console.log(error)
+			res.json(error)
+			//console.log(error)
 		}
 
 	}

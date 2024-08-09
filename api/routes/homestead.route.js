@@ -24,7 +24,7 @@ router.get('/bylocation',homesteadController.countHomesteadsByLocation)
 router.get('/byrelocation',homesteadController.countHomesteadsByRelocationStatus)
 
 //get homestead all report
-router.get('/allreport',homesteadController.homesteadsreport)
+router.get('/allreport',homesteadController.allHomesteadReports)
 
 //get homestead single report
 router.get('/singlereport/:id',homesteadController.singlehomesteadreport)
