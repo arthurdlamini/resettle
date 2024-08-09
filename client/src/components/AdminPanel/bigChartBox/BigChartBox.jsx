@@ -38,10 +38,10 @@ function BigChartBox({data,title}) {
 							cursor={{ fill: 'none' }}
 						/>
 						
-						<XAxis dataKey='month'  />
+						<XAxis dataKey='location'  />
 						<YAxis />
 						<Legend />
-						<Bar dataKey='value' fill='#4169e1'/>
+						<Bar dataKey='total' fill='#4169e1'/>
 					</BarChart>
 				</ResponsiveContainer>
 					</>

@@ -8,6 +8,7 @@ const {isAdmin,authMiddleware} = require('../middleware/authMiddleware');
 
 //get all unit
 router.get('/',unitController.findAllunits);
+
 //count all units
 router.get('/all',unitController.countAllunits);
 

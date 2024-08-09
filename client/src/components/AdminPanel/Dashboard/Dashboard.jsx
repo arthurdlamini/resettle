@@ -29,14 +29,13 @@ function Dashboard() {
   const [totalBildings, setTotalBuildings] = useState(0);
 
   const [totalTrees, setTotalTrees] = useState(0);
-  const [totalrelocated, setTotalRelocated] = useState(0);
+  const [totalrelocated, setTotalRelocated] = useState([]);
   const [totalrelocatedgaves, setTotalRelocatedgraves] = useState(0);
   const [totalrelocatedbuildings, setTotalRelocatedbuildings] = useState(0);
   const [totalnotrelocatedgaves, setTotalNotRelocatedgraves] = useState(0);
   const [totalnotrelocatedbuildings, setTotalNotRelocatedbuildings] =
     useState(0);
   const [totalgraves, setTotalGraves] = useState(0);
-  const [totalunrlocated, setTotalnrelocated] = useState(0);
   const [data, setData] = useState([]);
 
   //get recent tickets
@@ -55,7 +54,7 @@ function Dashboard() {
   const gethomesteadHistory = async () => {
     try {
       dispatch(loading(true)); // Set loading state to true before fetching data
-      const { data } = await api(user).get(`/homesteads/fivemonths`);
+      const { data } = await api(user).get(`/homesteads/bylocation`);
       setData(data);
     } catch (error) {
       console.error(error);
@@ -88,23 +87,12 @@ function Dashboard() {
       dispatch(loading(false)); // Set loading state to false after fetching data
     }
   };
-  //This week
-  const getRelocatedHomes = async () => {
+  //Home relocation status
+  const getHomeRElocationStatusCount = async () => {
     try {
       dispatch(loading(true)); // Set loading state to true before fetching data
-      const { data } = await api(user).get(`/homesteads/relocated`);
+      const { data } = await api(user).get(`/homesteads/byrelocation`);
       setTotalRelocated(data);
-    } catch (error) {
-      console.error(error);
-    } finally {
-      dispatch(loading(false)); // Set loading state to false after fetching data
-    }
-  }; //T
-  const getUnrelocatedHomes = async () => {
-    try {
-      dispatch(loading(true)); // Set loading state to true before fetching data
-      const { data } = await api(user).get(`/homesteads/notrelocated/`);
-      setTotalnrelocated(data);
     } catch (error) {
       console.error(error);
     } finally {
@@ -186,10 +174,7 @@ function Dashboard() {
     getUnrelocatedGraves();
   }, []);
   useEffect(() => {
-    getUnrelocatedHomes();
-  }, []);
-  useEffect(() => {
-    getRelocatedHomes();
+    getHomeRElocationStatusCount();
   }, []);
   useEffect(() => {
     getTotalTrees();
@@ -248,11 +233,10 @@ function Dashboard() {
             </span>
           </small>
           <span
-            className={`status-text ${
-              status === false ? "status-not-started" : "status-completed"
-            }`}
+            className={`status-text ${status === false ? "status-not-started" : "status-completed"
+              }`}
           >
-            {status===true ? "Relocated" : "Not Relocated"}
+            {status === true ? "Relocated" : "Not Relocated"}
           </span>
         </div>
       </div>
@@ -285,14 +269,18 @@ function Dashboard() {
     ScrollToTop();
   }, [pathname]);
 
-  const piedata = [
-    { name: "Relocated", value: totalrelocated, color: "#008000" },
-    {
-      name: "Not Relocated",
-      value: totalunrlocated,
-      color: "#4169e1",
-    },
-  ];
+ 
+ const  relocationdata = totalrelocated.map((obj) => {
+    if (obj.relocated === true) {
+      return { name: "Relocated", value: obj.total, color: "#008000" }
+    } else
+      return {
+        name: "Not Relocated",
+        value: obj.total,
+        color: "#4169e1",
+      }
+  });
+
   const piedatagraves = [
     { name: "Relocated", value: totalrelocatedgaves, color: "#008000" },
     {
@@ -309,7 +297,7 @@ function Dashboard() {
       color: "#4169e1",
     },
   ];
-  
+
   return (
     <div className="dash-container my-3">
       <div className="dash box0">
@@ -355,7 +343,7 @@ function Dashboard() {
           />
         </div>
         <div className="dash box3">
-          <PieChartBox data={piedata} title="Homesteads" height={300} />
+          <PieChartBox data={relocationdata} title="Homesteads" height={300} />
         </div>
         <div className="dash box4">
           <ChartBox
@@ -376,7 +364,7 @@ function Dashboard() {
           />
         </div>
         <div className="dash box6">
-          <BigChartBox data={data} title="Total Homesteads By Month" />
+          <BigChartBox data={data} title="Total Homesteads By Location" />
         </div>
         <div className="dash box7">
           <PieChartBox data={piedatagraves} title="Graves" height={100} />

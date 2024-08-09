@@ -17,6 +17,18 @@ router.get('/relocated',authMiddleware,homesteadController.countAllRelocatedHome
 //get all homesteads for the ast five months
 router.get('/notrelocated',authMiddleware,homesteadController.countAllNotRelocatedHomes)
 
+//get homestead by location
+router.get('/bylocation',homesteadController.countHomesteadsByLocation)
+
+//get homestead by location
+router.get('/byrelocation',homesteadController.countHomesteadsByRelocationStatus)
+
+//get homestead all report
+router.get('/allreport',homesteadController.homesteadsreport)
+
+//get homestead single report
+router.get('/singlereport/:id',homesteadController.singlehomesteadreport)
+
 //count all homesteads
 router.get('/all',authMiddleware,homesteadController.countAllhomesteads)
 
@@ -24,6 +36,7 @@ router.get('/all',authMiddleware,homesteadController.countAllhomesteads)
 router.get('/report',homesteadController.gethomesteadReport)
 
 router.get('/',homesteadController.findAllhomesteads);
+
 //find homestead by ID
 router.get('/:id',authMiddleware,homesteadController.findhomesteadbyId);
 //Add new homestead

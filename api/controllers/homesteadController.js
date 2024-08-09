@@ -2,6 +2,7 @@ const Homestead = require('../models/Homestead');
 const homestead = require('../models/Homestead');
 const moment = require('moment');
 const Person = require('../models/Person');
+const mongoose = require("mongoose");
 //reverse object
 function dict_reverse(obj) {
 	new_obj = {};
@@ -16,13 +17,13 @@ module.exports = {
 
 	addhomestead(req, res) {
 		console.log(req.body)
-		const { homesteadHead,  images, location, southing, easting } = req.body;
+		const { homesteadHead, images, location, southing, easting } = req.body;
 		//find if homestead already added
 		const newhomestead = new homestead({
 			homesteadHead,
 			images,
 			location,
-			southing, 
+			southing,
 			easting
 		});
 		//save new homestead
@@ -109,23 +110,23 @@ module.exports = {
 	//updates homestead
 	updatehomestead(req, res) {
 		const { id } = req.params;
-		const {  homesteadHead,  images, location, southing, easting,relocated  } = req.body;
+		const { homesteadHead, images, location, southing, easting, relocated } = req.body;
 		//CHECK IF NAME ALREADY EXIST
 		homestead
-			
-					//change homestead name
-					homestead
-						.updateOne(
-							{ _id: id },
-							{
-								$set: {
-									homesteadHead,  images, location, southing, easting ,relocated
-								},
-							}
-						)
-						.then((data) => res.json(data))
-						.catch((err) => res.json(err));
-				
+
+		//change homestead name
+		homestead
+			.updateOne(
+				{ _id: id },
+				{
+					$set: {
+						homesteadHead, images, location, southing, easting, relocated
+					},
+				}
+			)
+			.then((data) => res.json(data))
+			.catch((err) => res.json(err));
+
 	},
 	//find homestead by id
 	findhomesteadbyId(req, res) {
@@ -136,12 +137,12 @@ module.exports = {
 			.catch((err) => res.json(err));
 	},//Get all recent homesteads
 	recentAllHomesteads(req, res) {
-		
-		
+
+
 		let d = new Date();
 		let n = d.getFullYear();
 		let m = d.getMonth();
-		
+
 		homestead
 			.find()
 			.sort({ $natural: -1 })
@@ -151,9 +152,341 @@ module.exports = {
 				if (err) return res.json(err);
 				res.json(data);
 			});
-	}, async gethomesteadReport(req,res){
+	}, async gethomesteadReport(req, res) {
 		let homesteads = await Homestead.find().populate('homesteadHead')
 		console.log(homesteads)
-		
+
+	},
+	async countHomesteadsByLocation(req, res) {
+
+
+		try {
+			const result = await homestead.aggregate([
+				{
+					'$group': {
+						'_id': '$location',
+						'count': {
+							'$sum': 1
+						}
+					}
+				}
+			])
+
+			// Format the result
+			const response = result.map((obj) => {
+				return {
+					total: obj.count,
+					location: obj._id,
+				};
+			});
+
+			res.json(response);
+		} catch (error) {
+			console.log(error)
+		}
+
+	},
+	async countHomesteadsByRelocationStatus(req, res) {
+
+
+		try {
+			const result = await homestead.aggregate([
+				{
+					'$group': {
+						'_id': '$relocated',
+						'count': {
+							'$sum': 1
+						}
+					}
+				}
+			])
+
+			// Format the result
+			const response = result.map((obj) => {
+				return {
+					total: obj.count,
+
+					relocated: obj._id,
+				};
+			});
+
+			res.json(response);
+		} catch (error) {
+			console.log(error)
+		}
+
+	},
+	async homesteadsreport(req, res) {
+
+
+		try {
+			const result = await homestead.aggregate([
+
+				{
+					$lookup: {
+						from: "buildings",
+						localField: "_id",
+						foreignField: "homesteadID",
+						as: "buildings",
+					},
+				},
+				{
+					$lookup: {
+						from: "compensations",
+						localField: "_id",
+						foreignField: "homesteadId",
+						as: "compensations",
+					},
+				},
+				{
+					$lookup: {
+						from: "fields",
+						localField: "_id",
+						foreignField: "homesteadId",
+						as: "fields",
+					},
+				},
+				{
+					$lookup: {
+						from: "graves",
+						localField: "_id",
+						foreignField: "homesteadId",
+						as: "graves",
+					},
+				},
+				{
+					$lookup: {
+						from: "structures",
+						localField: "_id",
+						foreignField: "homesteadID",
+						as: "structures",
+					},
+				},
+				{
+					$lookup: {
+						from: "trees",
+						localField: "_id",
+						foreignField: "homesteadId",
+						as: "trees",
+					},
+				},
+				{
+					$lookup: {
+						from: "people",
+						localField: "homesteadHead",
+						foreignField: "_id",
+						as: "owner_details",
+					},
+				},
+
+				{
+					$addFields: {
+						owner_details: {
+							$arrayElemAt: ["$owner_details", 0],
+						},
+					},
+				},
+				{
+					$addFields: {
+						numberOfGraves: {
+							$size: {
+								$ifNull: ["$graves", []],
+							},
+						},
+						numberOfTrees: {
+							$size: {
+								$ifNull: ["$trees", []],
+							},
+						},
+						numberOfBuildings: {
+							$size: {
+								$ifNull: ["$buildings", []],
+							},
+						},
+						numberOfStructures: {
+							$size: {
+								$ifNull: ["$structures", []],
+							},
+						},
+						numberOfGraves: {
+							$size: {
+								$ifNull: ["$graves", []],
+							},
+						},
+						numberOfFields: {
+							$size: {
+								$ifNull: ["$fields", []],
+							},
+						},
+						owners_name: "$owner_details.name",
+						owners_ID: "$owner_details.IDNo",
+						owners_phone: "$owner_details.phone",
+					},
+				},
+				{
+					$project:
+					{
+						homesteadHead: 0,
+						images: 0,
+						updatedAt: 0,
+						__v: 0,
+						structures: 0,
+						graves: 0,
+						buildings: 0,
+						trees: 0,
+						owner_details: 0,
+						_id: 0,
+					},
+				},
+
+			])
+
+			res.json(result);
+		} catch (error) {
+			res.status()
+			console.log(error)
+		}
+
+	}, async singlehomesteadreport(req, res) {
+
+
+		const { id } = req.params;
+
+		let d = mongoose.Types.ObjectId(id)
+		try {
+			const result = await homestead.aggregate([
+				{
+					$match: {
+						_id: d,
+					},
+				},
+
+
+				{
+					$lookup: {
+						from: "buildings",
+						localField: "_id",
+						foreignField: "homesteadID",
+						as: "buildings",
+					},
+				},
+				{
+					$lookup: {
+						from: "compensations",
+						localField: "_id",
+						foreignField: "homesteadId",
+						as: "compensations",
+					},
+				},
+				{
+					$lookup: {
+						from: "fields",
+						localField: "_id",
+						foreignField: "homesteadId",
+						as: "fields",
+					},
+				},
+				{
+					$lookup: {
+						from: "graves",
+						localField: "_id",
+						foreignField: "homesteadId",
+						as: "graves",
+					},
+				},
+				{
+					$lookup: {
+						from: "structures",
+						localField: "_id",
+						foreignField: "homesteadID",
+						as: "structures",
+					},
+				},
+				{
+					$lookup: {
+						from: "trees",
+						localField: "_id",
+						foreignField: "homesteadId",
+						as: "trees",
+					},
+				},
+				{
+					$lookup: {
+						from: "people",
+						localField: "homesteadHead",
+						foreignField: "_id",
+						as: "owner_details",
+					},
+				},
+				{
+					$addFields: {
+						owner_details: {
+							$arrayElemAt: ["$owner_details", 0],
+						},
+					},
+				},
+				{
+					$addFields: {
+						numberOfGraves: {
+							$size: {
+								$ifNull: ["$graves", []],
+							},
+						},
+						numberOfTrees: {
+							$size: {
+								$ifNull: ["$trees", []],
+							},
+						},
+						numberOfBuildings: {
+							$size: {
+								$ifNull: ["$buildings", []],
+							},
+						},
+						numberOfStructures: {
+							$size: {
+								$ifNull: ["$structures", []],
+							},
+						},
+						numberOfGraves: {
+							$size: {
+								$ifNull: ["$graves", []],
+							},
+						},
+						numberOfFields: {
+							$size: {
+								$ifNull: ["$fields", []],
+							},
+						},
+						owners_name: "$owner_details.name",
+						owners_ID: "$owner_details.IDNo",
+						owners_phone: "$owner_details.phone",
+					},
+				},
+				{
+					$project:
+					/**
+					 * specifications: The fields to
+					 *   include or exclude.
+					 */
+					{
+						homesteadHead: 0,
+						images: 0,
+						updatedAt: 0,
+						__v: 0,
+						structures: 0,
+						graves: 0,
+						buildings: 0,
+						trees: 0,
+						owner_details: 0,
+						_id: 0,
+					},
+				},
+
+			])
+			res.json(result);
+		} catch (error) {
+			console.log(error)
+		}
+
 	}
 };
